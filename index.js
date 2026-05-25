@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const {
     Client,
     GatewayIntentBits,
@@ -7,12 +5,13 @@ const {
     Events
 } = require('discord.js');
 
+// ✅ TOKEN from environment (WORKS in Docker / Railway / Render / etc.)
 const TOKEN = process.env.TOKEN;
 
-// 🔴 Prevent crash if token is missing
+// ❌ Stop immediately if token is missing
 if (!TOKEN) {
-    console.error("❌ ERROR: TOKEN is missing!");
-    console.error("➡️ Set TOKEN in your environment variables (not just .env if using a container)");
+    console.error("❌ ERROR: TOKEN is missing in environment variables!");
+    console.error("👉 Add TOKEN in your hosting panel (NOT in code)");
     process.exit(1);
 }
 
@@ -68,7 +67,7 @@ client.on(Events.MessageCreate, async (message) => {
         await message.reply('✅ Convocazione inviata.');
 
     } catch (err) {
-        console.error("Error sending convocazione:", err);
+        console.error("❌ Error:", err);
         await message.reply('❌ Errore nell’invio della convocazione.');
     }
 });
