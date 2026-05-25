@@ -5,13 +5,13 @@ const {
     Events
 } = require('discord.js');
 
-// ✅ TOKEN from environment (WORKS in Docker / Railway / Render / etc.)
+console.log("TOKEN EXISTS:", !!process.env.TOKEN);
+console.log("TOKEN LENGTH:", process.env.TOKEN?.length);
+
 const TOKEN = process.env.TOKEN;
 
-// ❌ Stop immediately if token is missing
 if (!TOKEN) {
-    console.error("❌ ERROR: TOKEN is missing in environment variables!");
-    console.error("👉 Add TOKEN in your hosting panel (NOT in code)");
+    console.error("❌ TOKEN MISSING IN RAILWAY ENV");
     process.exit(1);
 }
 
@@ -33,7 +33,6 @@ client.once(Events.ClientReady, () => {
 client.on(Events.MessageCreate, async (message) => {
 
     if (message.author.bot) return;
-
     if (!message.content.startsWith('!convoca')) return;
 
     if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
@@ -50,7 +49,7 @@ client.on(Events.MessageCreate, async (message) => {
         const canale = await message.guild.channels.fetch(ASSISTENZA_CHANNEL_ID);
 
         if (!canale) {
-            return message.reply('❌ Canale assistenza non trovato.');
+            return message.reply('❌ Canale non trovato.');
         }
 
         const embed = new EmbedBuilder()
@@ -67,9 +66,10 @@ client.on(Events.MessageCreate, async (message) => {
         await message.reply('✅ Convocazione inviata.');
 
     } catch (err) {
-        console.error("❌ Error:", err);
-        await message.reply('❌ Errore nell’invio della convocazione.');
+        console.error(err);
+        await message.reply('❌ Errore nell’invio.');
     }
 });
 
+client.login(TOKEN);
 client.login(TOKEN);
