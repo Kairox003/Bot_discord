@@ -9,8 +9,11 @@ const {
 
 const TOKEN = process.env.TOKEN;
 
+// 🔴 Prevent crash if token is missing
 if (!TOKEN) {
-    throw new Error("❌ TOKEN is missing! Set it in your environment variables or .env file.");
+    console.error("❌ ERROR: TOKEN is missing!");
+    console.error("➡️ Set TOKEN in your environment variables (not just .env if using a container)");
+    process.exit(1);
 }
 
 const client = new Client({
@@ -65,7 +68,7 @@ client.on(Events.MessageCreate, async (message) => {
         await message.reply('✅ Convocazione inviata.');
 
     } catch (err) {
-        console.error(err);
+        console.error("Error sending convocazione:", err);
         await message.reply('❌ Errore nell’invio della convocazione.');
     }
 });
