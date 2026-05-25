@@ -16,7 +16,7 @@ const client = new Client({
 const TOKEN = process.env.TOKEN;
 
 const STAFF_ROLE_ID = '1498018738753110217';
-const ASSISTENZA_CHANNEL_ID = 'https://discord.com/channels/1439994680413523980/1508549805121732753';
+const ASSISTENZA_CHANNEL_ID = '1508549805121732753';
 
 client.once(Events.ClientReady, () => {
     console.log('Bot online!');
