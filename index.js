@@ -2,74 +2,117 @@ const {
     Client,
     GatewayIntentBits,
     EmbedBuilder,
-    Events
+    Events,
+    REST,
+    Routes,
+    SlashCommandBuilder
 } = require('discord.js');
 
-console.log("TOKEN EXISTS:", !!process.env.TOKEN);
-console.log("TOKEN LENGTH:", process.env.TOKEN?.length);
-
 const TOKEN = process.env.TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+const GUILD_ID = process.env.GUILD_ID;
 
-if (!TOKEN) {
-    console.error("❌ TOKEN MISSING IN RAILWAY ENV");
+if (!TOKEN || !CLIENT_ID || !GUILD_ID) {
+    console.error("❌ Missing TOKEN, CLIENT_ID or GUILD_ID");
     process.exit(1);
 }
 
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.Guilds
     ]
 });
 
+// 🔐 IDs
 const STAFF_ROLE_ID = '1498018738753110217';
 const ASSISTENZA_CHANNEL_ID = '1508549805121732753';
 
+//
+// 🧩 SLASH COMMAND WITH USER SELECTOR
+//
+const commands = [
+    new SlashCommandBuilder()
+        .setName('convoca')
+        .setDescription('Convoca un utente')
+        .addUserOption(option =>
+            option
+                .setName('utente')
+                .setDescription('Seleziona un utente')
+                .setRequired(true)
+        )
+        .toJSON()
+];
+
+const rest = new REST({ version: '10' }).setToken(TOKEN);
+
+(async () => {
+    try {
+        console.log("🔄 Registering slash command...");
+        await rest.put(
+            Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+            { body: commands }
+        );
+        console.log("✅ Slash command registered!");
+    } catch (err) {
+        console.error(err);
+    }
+})();
+
+//
+// BOT READY
+//
 client.once(Events.ClientReady, () => {
     console.log(`🤖 Bot online as ${client.user.tag}`);
 });
 
-client.on(Events.MessageCreate, async (message) => {
+//
+// COMMAND HANDLER
+//
+client.on(Events.InteractionCreate, async interaction => {
 
-    if (message.author.bot) return;
-    if (!message.content.startsWith('!convoca')) return;
+    if (!interaction.isChatInputCommand()) return;
 
-    if (!message.member.roles.cache.has(STAFF_ROLE_ID)) {
-        return message.reply('❌ Non sei staff.');
-    }
+    if (interaction.commandName !== 'convoca') return;
 
-    const utente = message.mentions.users.first();
+    const utente = interaction.options.getUser('utente');
 
-    if (!utente) {
-        return message.reply('❌ Devi taggare un utente.');
+    // staff check
+    if (!interaction.member.roles.cache.has(STAFF_ROLE_ID)) {
+        return interaction.reply({
+            content: '❌ Non sei staff.',
+            ephemeral: true
+        });
     }
 
     try {
-        const canale = await message.guild.channels.fetch(ASSISTENZA_CHANNEL_ID);
-
-        if (!canale) {
-            return message.reply('❌ Canale non trovato.');
-        }
+        const channel = await interaction.guild.channels.fetch(ASSISTENZA_CHANNEL_ID);
 
         const embed = new EmbedBuilder()
             .setColor('#111111')
             .setTitle('📞 Convocazione')
-            .setDescription(`${utente} sei stato convocato da ${message.author}`)
+            .setDescription(`${utente} sei stato convocato da ${interaction.user}`)
             .setTimestamp();
 
-        await canale.send({
+        await channel.send({
             content: `${utente}`,
             embeds: [embed]
         });
 
-        await message.reply('✅ Convocazione inviata.');
+        await interaction.reply({
+            content: '✅ Convocazione inviata.',
+            ephemeral: true
+        });
 
     } catch (err) {
         console.error(err);
-        await message.reply('❌ Errore nell’invio.');
+
+        await interaction.reply({
+            content: '❌ Errore nell’invio.',
+            ephemeral: true
+        });
     }
 });
 
 client.login(TOKEN);
+
 client.login(TOKEN);
